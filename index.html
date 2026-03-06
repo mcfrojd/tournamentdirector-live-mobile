@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Turnering Live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --felt:      #0d1117;
+    --felt-mid:  #161b22;
+    --felt-light:#21262d;
+    --gold:      #58a6ff;
+    --gold-dim:  #388bfd;
+    --red-bright:#f85149;
+    --cream:     #e6edf3;
+    --muted:     #8b949e;
+    --positive:  #3fb950;
+  }
+  /* GitHub Dark overrides */
+  .logo          { color: var(--gold); text-shadow: 0 0 30px rgba(88,166,255,0.25); }
+  .level-name    { color: var(--gold); }
+  .stat-val.gold { color: var(--gold); }
+  .avg-bb        { color: var(--gold-dim); }
+  .next-blinds-bar { background: rgba(88,166,255,0.06); border-color: rgba(88,166,255,0.2); color: var(--gold-dim); }
+  .next-blinds-bar span { color: var(--cream); }
+  .progress-bar  { background: linear-gradient(90deg, #388bfd, #58a6ff); }
+  .blind-val.ante-val { color: var(--gold); }
+  .money-card.itm { border-color: rgba(88,166,255,0.35); background: rgba(88,166,255,0.06); }
+  .money-card.itm .money-card-val { color: var(--gold); }
+  .status-dot.live { background: #3fb950; box-shadow: 0 0 7px rgba(63,185,80,0.7); }
+  .clock-card  { border-color: rgba(88,166,255,0.2); }
+  .blind-card, .stat-card, .stack-card, .money-card { border-color: #30363d; }
+  header       { border-bottom-color: #30363d; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--felt); color: var(--cream);
+    font-family: 'DM Mono', monospace;
+    min-height: 100dvh; overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px),
+      repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none; z-index: 0;
+  }
+  .page {
+    position: relative; z-index: 1;
+    padding: 16px 14px 32px;
+    max-width: 600px; margin: 0 auto;
+  }
+
+  /* ── TURNERINGSTITEL ── */
+  .tourney-title-block {
+    margin-bottom: 10px;
+  }
+  .tourney-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.35rem; letter-spacing: 0.08em;
+    color: var(--cream); line-height: 1.1;
+  }
+  .tourney-desc {
+    font-size: 0.75rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px; padding-bottom: 14px;
+    border-bottom: 1px solid var(--gold-dim);
+  }
+  .logo {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.9rem;
+    letter-spacing: 0.1em; color: var(--gold);
+    text-shadow: 0 0 30px rgba(200,169,74,0.35); line-height: 1;
+  }
+  .status-pill {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 0.75rem; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted); padding: 5px 12px;
+    border: 1px solid var(--felt-light); border-radius: 2px;
+  }
+  .status-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--muted); transition: background 0.3s; flex-shrink: 0;
+  }
+  .status-dot.live { background: #2ecc71; box-shadow: 0 0 7px rgba(46,204,113,0.7); animation: blink 2s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* ── CLOCK CARD ── */
+  .clock-card {
+    background: var(--felt-mid);
+    border: 1px solid rgba(200,169,74,0.18);
+    border-radius: 6px; padding: 18px 18px 14px;
+    margin-bottom: 12px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0 16px;
+  }
+  .level-label {
+    font-size: 0.75rem; letter-spacing: 0.25em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 4px;
+  }
+  .level-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem; letter-spacing: 0.06em; color: var(--gold); line-height: 1;
+  }
+  .level-sub { font-size: 0.6rem; color: var(--muted); margin-top: 4px; }
+  .clock-wrap {
+    display: flex; flex-direction: column; align-items: flex-end;
+  }
+  .clock-display {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 4.2rem; letter-spacing: 0.04em; line-height: 1;
+    color: #fff; text-shadow: 0 0 40px rgba(255,255,255,0.12);
+    transition: color 0.4s;
+  }
+  .clock-display.warning { color: #f39c12; text-shadow: 0 0 20px rgba(243,156,18,0.5); }
+  .clock-display.critical { color: var(--red-bright); text-shadow: 0 0 20px rgba(231,76,60,0.5); animation: flicker 1s infinite; }
+  @keyframes flicker { 0%,100%{opacity:1} 50%{opacity:.65} }
+  .clock-status {
+    font-size: 0.82rem; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--muted); margin-top: 3px; text-align: right;
+  }
+  .clock-status.paused { color: #f39c12; }
+  .clock-status.break-st { color: #5b9bd5; }
+  .progress-wrap { grid-column: 1 / -1; margin-top: 12px; }
+  .progress-track { height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+  .progress-bar { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); transition: width 1s linear; }
+
+  /* ── NÄSTA BLINDS BAR ── */
+  .next-blinds-bar {
+    background: rgba(200,169,74,0.07);
+    border: 1px solid rgba(200,169,74,0.18);
+    border-radius: 5px;
+    padding: 9px 14px;
+    margin-bottom: 8px;
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    color: var(--gold-dim);
+    text-align: center;
+  }
+  .next-blinds-bar span { color: var(--cream); }
+
+  /* ── BLINDS ── */
+  /* Default: 3 columns (with ante) */
+  .blinds-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px; margin-bottom: 12px;
+  }
+  /* No ante: 2 columns, bigger cards */
+  .blinds-row.no-ante {
+    grid-template-columns: 1fr 1fr;
+  }
+  .blind-card {
+    background: var(--felt-mid);
+    border: 1px solid rgba(200,169,74,0.13);
+    border-radius: 5px; padding: 14px 14px 12px;
+    text-align: center;
+  }
+  .no-ante .blind-card {
+    padding: 20px 20px 16px;
+  }
+  .blind-lbl {
+    font-size: 0.82rem; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 5px;
+  }
+  .no-ante .blind-lbl { font-size: 0.75rem; }
+  .blind-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.9rem; letter-spacing: 0.04em; line-height: 1.1; color: var(--cream);
+  }
+  .no-ante .blind-val { font-size: 2.4rem; }
+  .blind-val.ante-val { color: var(--gold); font-size: 1.4rem; }
+
+  /* ── STATS 2×2 ── */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .stat-card {
+    background: var(--felt-mid);
+    border: 1px solid rgba(200,169,74,0.13);
+    border-radius: 5px; padding: 14px 14px 12px;
+    text-align: center;
+  }
+  .stat-lbl { font-size: 0.82rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+  .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 1.9rem; letter-spacing: 0.03em; line-height: 1.1; color: var(--cream); }
+  .stat-val.green { color: #2ecc71; }
+  .stat-val.gold  { color: var(--gold); }
+  .stat-sub { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+  /* ── STACK ── */
+  .stack-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .stack-card {
+    background: var(--felt-mid);
+    border: 1px solid #30363d;
+    border-radius: 5px;
+    padding: 14px 14px 12px;
+    text-align: center;
+  }
+  .panel-ttl { font-size: 0.82rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 8px; }
+  .avg-num { font-family: 'Bebas Neue', sans-serif; font-size: 1.9rem; letter-spacing: 0.03em; color: var(--cream); line-height: 1; }
+  .avg-bb { font-size: 0.82rem; color: var(--gold-dim); margin-top: 5px; letter-spacing: 0.08em; }
+  .avg-sub { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+  /* ── NEDRE INFORAD ── */
+  .money-info-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .money-card {
+    background: var(--felt-mid);
+    border: 1px solid rgba(200,169,74,0.13);
+    border-radius: 5px;
+    padding: 14px 16px;
+    text-align: center;
+  }
+  .money-card.busts {
+    border-color: rgba(231,76,60,0.3);
+    background: rgba(231,76,60,0.05);
+  }
+  .money-card.itm {
+    border-color: rgba(200,169,74,0.3);
+    background: rgba(200,169,74,0.05);
+  }
+  .money-card-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.8rem; letter-spacing: 0.04em; line-height: 1;
+  }
+  .money-card.busts .money-card-val { color: #e74c3c; }
+  .money-card.itm .money-card-val   { color: var(--gold); }
+  .money-card-lbl {
+    font-size: 0.75rem; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--muted);
+    margin-top: 6px;
+  }
+
+
+  /* ── SPRÅKVÄLJARE ── */
+  .lang-bar {
+    display: flex; justify-content: center; gap: 16px;
+    padding: 20px 0 8px;
+  }
+  .lang-btn {
+    background: none; border: 2px solid var(--felt-light);
+    border-radius: 4px; padding: 5px 14px;
+    cursor: pointer; font-family: 'DM Mono', monospace;
+    font-size: 0.75rem; letter-spacing: 0.2em;
+    color: var(--muted);
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .lang-btn.active { color: var(--gold); border-color: var(--gold); }
+  .lang-btn:hover  { color: var(--cream); border-color: var(--muted); }
+
+
+  /* ── TIMEOUT OVERLAY ── */
+  .timeout-banner {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(13,17,23,0.85);
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+  }
+  .timeout-banner.show { display: flex; }
+  .timeout-icon { font-size: 2.5rem; opacity: 0.4; }
+  .timeout-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem; letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  .timeout-sub {
+    font-size: 0.72rem; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--muted);
+    opacity: 0.6;
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--felt-mid); border: 1px solid var(--gold-dim);
+    border-radius: 3px; padding: 10px 18px;
+    font-size: 0.68rem; letter-spacing: 0.1em; color: var(--gold);
+    z-index: 999; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  @keyframes val-flash { 0%{color:var(--gold)} 100%{color:inherit} }
+  .changed { animation: val-flash 0.7s ease-out; }
+</style>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♠</text></svg>">
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="logo">♠ Turnering Live</div>
+    <div class="status-pill">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Väntar</span>
+    </div>
+  </header>
+
+  <!-- Turneringstitel -->
+  <div class="tourney-title-block" id="tourneyTitleBlock" style="display:none">
+    <div class="tourney-name" id="tourneyName"></div>
+    <div class="tourney-desc" id="tourneyDesc"></div>
+  </div>
+
+  <!-- Klocka -->
+  <div class="clock-card">
+    <div>
+      <div class="level-label" id="lbl-currentLevel">Aktuell nivå</div>
+      <div class="level-name" id="levelName">—</div>
+    </div>
+    <div class="clock-wrap">
+      <div class="clock-display" id="clockDisplay">--:--</div>
+      <div class="clock-status" id="clockStatus">tid kvar</div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <!-- Blinds -->
+  <div class="blinds-row" id="blindsRow">
+    <div class="blind-card">
+      <div class="blind-lbl" id="lbl-smallBlind">Liten blind</div>
+      <div class="blind-val" id="smallBlind">—</div>
+    </div>
+    <div class="blind-card">
+      <div class="blind-lbl" id="lbl-bigBlind">Stor blind</div>
+      <div class="blind-val" id="bigBlind">—</div>
+    </div>
+    <div class="blind-card" id="anteBlock">
+      <div class="blind-lbl" id="lbl-ante">Ante</div>
+      <div class="blind-val ante-val" id="ante">—</div>
+    </div>
+  </div>
+
+  <!-- Nästa blinds -->
+  <div class="next-blinds-bar" id="nextBlindsTag" style="display:none">
+    <span id="nextLabel">Nästa:</span> <span id="nextLevelInfo">—</span>&nbsp;·&nbsp;<span id="nextBlinds">—</span>
+  </div>
+
+  <!-- Statistik 2×2 -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-lbl" id="lbl-players">Spelare kvar</div>
+      <div class="stat-val green" id="playersRemaining">—</div>
+      <div class="stat-sub" id="playersSub"></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-lbl" id="lbl-prizePool">Prispott</div>
+      <div class="stat-val gold" id="prizePool">—</div>
+      <div class="stat-sub" id="prizePoolSub"></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-lbl" id="lbl-rebuys">Rebuys / Add-ons</div>
+      <div class="stat-val" id="rebuysAddons">— / —</div>
+      <div class="stat-sub" id="rebuysAddonsSub"></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-lbl" id="lbl-house">Husbidrag</div>
+      <div class="stat-val gold" id="houseContrib">—</div>
+      <div class="stat-sub" id="houseContribSub"></div>
+    </div>
+  </div>
+
+  <!-- Snittstack & Totalt -->
+  <div class="stack-grid">
+    <div class="stack-card">
+      <div class="panel-ttl" id="lbl-avgStack">Snittstack</div>
+      <div class="avg-num" id="avgStack">—</div>
+      <div class="avg-bb" id="stacksBB">— BB</div>
+    </div>
+    <div class="stack-card">
+      <div class="panel-ttl" id="lbl-totalChips">Totalt i spel</div>
+      <div class="avg-num" id="totalChips">—</div>
+      <div class="avg-sub" id="tablesInfo">— bord</div>
+    </div>
+  </div>
+
+
+  <!-- Betalda platser & bust till pengar -->
+  <div class="money-info-bar" id="moneyInfoBar" style="display:none">
+    <div class="money-card itm">
+      <div class="money-card-val" id="itmCount">—</div>
+      <div class="money-card-lbl" id="lbl-paidPlaces">betalda platser</div>
+    </div>
+    <div class="money-card busts">
+      <div class="money-card-val" id="bustsCount">—</div>
+      <div class="money-card-lbl" id="bustsLbl">bust till $</div>
+    </div>
+  </div>
+
+
+  <!-- Språkväljare -->
+  <div class="lang-bar">
+    <button class="lang-btn active" id="lang-sv" onclick="setLang('sv')">SV</button>
+    <button class="lang-btn" id="lang-en" onclick="setLang('en')">EN</button>
+  </div>
+
+
+  <!-- Timeout overlay -->
+  <div class="timeout-banner" id="timeoutBanner">
+    <div class="timeout-icon">📡</div>
+    <div class="timeout-title" id="timeoutTitle">Ingen kontakt</div>
+    <div class="timeout-sub" id="timeoutSub">senaste data · —</div>
+  </div>
+
+</div><!-- /page -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+let settings = { currency: 'kr', warnThreshold: 120, critThreshold: 30 };
+
+// ── ÖVERSÄTTNINGAR ────────────────────────────────────────────────────────
+const LANG = {
+  sv: {
+    waiting:       'Väntar',
+    prestart:      'Förstart',
+    finished:      'Avslutat',
+    paused:        'Pausad',
+    live:          'Live',
+    currentLevel:  'Aktuell nivå',
+    timeLeft:      'tid kvar',
+    pausedLbl:     '⏸ Pausad',
+    breakLbl:      '☕ Paus',
+    logoTitle:     'Turnering Live',
+    nextLbl:       'Nästa:',
+    smallBlind:    'Liten blind',
+    bigBlind:      'Stor blind',
+    ante:          'Ante',
+    players:       'Spelare kvar',
+    of:            'av',
+    entered:       'anmälda',
+    prizePool:     'Prispott',
+    buyin:         'Insats:',
+    rebuys:        'Rebuys / Add-ons',
+    total:         'totalt',
+    open:          'öppna',
+    rebuysOpen:    'rebuys öppna',
+    house:         'Husbidrag',
+    fromHouse:     'från huset',
+    avgStack:      'Snittstack',
+    totalChips:    'Totalt i spel',
+    tables:        'bord',
+    paidPlaces:    'betalda platser',
+    bustsTill:     'bust till $',
+    noContact:     'Ingen kontakt',
+    inTheMoney:    '🏆 i pengarna!',
+    break:         'Paus',
+    level:         'Nivå',
+  },
+  en: {
+    waiting:       'Waiting',
+    prestart:      'Pre-game',
+    finished:      'Finished',
+    paused:        'Paused',
+    live:          'Live',
+    currentLevel:  'Current level',
+    timeLeft:      'time left',
+    pausedLbl:     '⏸ Paused',
+    breakLbl:      '☕ Break',
+    logoTitle:     'Tournament Live',
+    nextLbl:       'Next:',
+    smallBlind:    'Small blind',
+    bigBlind:      'Big blind',
+    ante:          'Ante',
+    players:       'Players left',
+    of:            'of',
+    entered:       'entered',
+    prizePool:     'Prize pool',
+    buyin:         'Buy-in:',
+    rebuys:        'Rebuys / Add-ons',
+    total:         'total',
+    open:          'open',
+    rebuysOpen:    'rebuys open',
+    house:         'House contribution',
+    fromHouse:     'from the house',
+    avgStack:      'Avg stack',
+    totalChips:    'Total chips',
+    tables:        'tables',
+    paidPlaces:    'paid places',
+    bustsTill:     'busts to $',
+    noContact:     'No contact',
+    inTheMoney:    '🏆 in the money!',
+    break:         'Break',
+    level:         'Level',
+  }
+};
+
+let currentLang = 'sv';
+
+function setLang(lang) {
+  currentLang = lang;
+  try { localStorage.setItem('td_lang', lang); } catch(e) {}
+  // Update button states
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('lang-' + lang);
+  if (btn) btn.classList.add('active');
+  // Update all static labels
+  applyStaticLabels();
+  // Re-render if we have data
+  if (lastRenderedData) render(lastRenderedData);
+}
+
+function applyStaticLabels() {
+  const t = LANG[currentLang];
+  // Static HTML labels
+  const map = {
+    'lbl-currentLevel': t.currentLevel,
+    'lbl-smallBlind':   t.smallBlind,
+    'lbl-bigBlind':     t.bigBlind,
+    'lbl-ante':         t.ante,
+    'lbl-players':      t.players,
+    'lbl-prizePool':    t.prizePool,
+    'lbl-rebuys':       t.rebuys,
+    'lbl-house':        t.house,
+    'lbl-avgStack':     t.avgStack,
+    'lbl-totalChips':   t.totalChips,
+    'lbl-paidPlaces':   t.paidPlaces,
+    'lbl-bustsTill':    t.bustsTill,
+    'timeoutTitle':    t.noContact,
+  };
+  Object.entries(map).forEach(([id, txt]) => {
+    const e = document.getElementById(id);
+    if (e) e.textContent = txt;
+  });
+  // Logo text and page title
+  const logo = document.querySelector('.logo');
+  if (logo) logo.textContent = '♠ ' + t.logoTitle;
+  document.title = t.logoTitle;
+  // "Nästa:" / "Next:" label
+  const nextLblEl = document.getElementById('nextLabel');
+  if (nextLblEl) nextLblEl.textContent = t.nextLbl;
+}
+
+function t(key) { return LANG[currentLang][key] || key; }
+
+
+function fmt(n) { return Number(n).toLocaleString('sv-SE'); }
+function fmtMoney(n) { return settings.currency + '\u00a0' + Number(n).toLocaleString('sv-SE'); }
+function fmtTime(secs) {
+  secs = Math.max(0, Math.round(secs));
+  return String(Math.floor(secs/60)).padStart(2,'0') + ':' + String(secs%60).padStart(2,'0');
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+function el(id) { return document.getElementById(id); }
+function setText(id, val, flash) {
+  const e = el(id); if (!e) return;
+  if (e.textContent !== String(val)) {
+    e.textContent = val;
+    if (flash) { e.classList.remove('changed'); void e.offsetWidth; e.classList.add('changed'); }
+  }
+}
+
+// ── NORMALIZE ─────────────────────────────────────────────────────────────
+function normalize(raw) {
+  const g = (p, c) => { const v = raw[p] !== undefined ? raw[p] : raw[c]; return v !== undefined ? v : null; };
+  const roundName   = raw.RoundName || raw.roundName || null;
+  const roundNum    = g('RoundNum','roundNumber');
+  const level       = g('Level','level');
+  const isRound     = g('IsRound','isRound');
+  const stateDesc   = raw.StateDesc || raw.stateDesc || null;
+  const secsLeft    = g('SecondsLeft','timeRemaining');
+  const secsElapsed = g('SecondsElapsed','secsElapsed');
+  const levelDurRaw = raw.LevelDuration != null ? raw.LevelDuration : raw.levelDuration;
+  const sb          = g('SmallBlind','smallBlind');
+  const bb          = g('BigBlind','bigBlind');
+  const ante        = g('Ante','ante');
+  const nextSb      = g('NextSmallBlind','nextSmallBlind');
+  const nextBb      = g('NextBigBlind','nextBigBlind');
+  const nextRoundName = raw.NextRoundName || raw.nextRoundName || null;
+  const playersLeft = g('PlayersLeft','playersRemaining');
+  const buyins      = g('Buyins','totalPlayers');
+  const tablesLeft  = g('TablesLeft','tables');
+  const prizePool   = raw.Pot != null ? raw.Pot : (raw.prizePool || null);
+  const totalChips  = raw.ChipCount != null ? raw.ChipCount : (raw.totalChips || null);
+  const avgStack    = (totalChips != null && playersLeft != null && Number(playersLeft) > 0)
+                      ? Math.round(Number(totalChips) / Number(playersLeft)) : (raw.avgStack || null);
+  const rebuys      = raw.TotalRebuys != null ? raw.TotalRebuys : (raw.rebuys || null);
+  const addons      = raw.TotalAddons != null ? raw.TotalAddons : (raw.addons || null);
+  const buyIn       = raw.DefaultBuyinFee != null ? raw.DefaultBuyinFee : (raw.BuyIn || raw.buyIn || null);
+  const inTheMoney  = raw.InTheMoneyRank || null;
+  const bustsUntilMoney = raw.BustsUntilMoney != null ? raw.BustsUntilMoney : null;
+  const houseContrib = raw.HouseContribution != null ? raw.HouseContribution : (raw.houseContribution || null);
+  const tName       = raw.Title || raw.TournamentName || raw.tournamentName || null;
+  const levelDurSecs = levelDurRaw != null ? Number(levelDurRaw) * 60 : 900;
+  const isPaused    = raw.ClockPaused == 1 || raw.Paused == 1 || raw.paused === true;
+  return {
+    tournamentName: tName,
+    roundName:  roundName || null,  // translated in render
+    roundNumber: roundNum, level, isRound, stateDesc,
+    paused: isPaused,
+    onBreak: raw.IsBreak == 1 || isRound == 0,
+    timeRemaining: secsLeft != null ? Number(secsLeft) : null,
+    levelDuration: levelDurSecs,
+    smallBlind: sb != null ? Number(sb) : null,
+    bigBlind:   bb != null ? Number(bb) : null,
+    ante: ante != null && Number(ante) > 0 ? Number(ante) : null,
+    nextSmallBlind: nextSb != null ? Number(nextSb) : null,
+    nextBigBlind:   nextBb != null ? Number(nextBb) : null,
+    nextRoundName,
+    playersRemaining: playersLeft != null ? Number(playersLeft) : null,
+    totalPlayers: buyins != null ? Number(buyins) : null,
+    tables: tablesLeft != null ? Number(tablesLeft) : null,
+    prizePool:  prizePool  != null ? Number(prizePool)  : null,
+    totalChips: totalChips != null ? Number(totalChips) : null,
+    avgStack:   avgStack   != null ? Number(avgStack)   : null,
+    rebuys:     rebuys     != null ? Number(rebuys)     : null,
+    addons:     addons     != null ? Number(addons)     : null,
+    buyIn:      buyIn      != null ? Number(buyIn)      : null,
+    inTheMoney, bustsUntilMoney,
+    houseContrib: houseContrib != null ? Number(houseContrib) : null,
+    description: raw.Description || raw.description || null,
+    _raw: raw
+  };
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+let lastRenderedData = null;
+function render(rawData) {
+  lastRenderedData = rawData;
+  const d = normalize(rawData);
+  // Settings are hardcoded (no admin page)
+
+  // Status
+  el('statusDot').className = 'status-dot live';
+  el('statusText').textContent =
+    d.stateDesc === 'before' ? t('prestart') :
+    d.stateDesc === 'after'  ? t('finished') :
+    d.paused ? t('paused') : t('live');
+
+  // Level
+  const levelDisplayName = d.roundName ||
+    (d.onBreak ? t('break') : t('level') + ' ' + d.roundNumber);
+  setText('levelName', levelDisplayName || '—', true);
+  // levelNumber element removed — shown in nästa-raden instead
+  // Nästa: visa "Paus" om NextIsBreak, annars räkna ut nästa spelrunda
+  let nextLvlLabel;
+  if (d._raw && d._raw.NextIsBreak == 1) {
+    nextLvlLabel = t('break');
+  } else if (d._raw) {
+    // Under paus: RoundNum = nästa spelrunda (t.ex. 11 → "Nivå 11")
+    // Under spelrunda: RoundNum = aktuell runda, nästa = RoundNum + 1
+    const nextRound = d._raw.IsBreak == 1
+      ? Number(d._raw.RoundNum)
+      : Number(d._raw.RoundNum) + 1;
+    nextLvlLabel = t('level') + ' ' + nextRound;
+  } else {
+    nextLvlLabel = d.nextRoundName || '—';
+  }
+  setText('nextLevelInfo', nextLvlLabel);
+
+  // Synka lokal klocka mot TD:s värde
+  const tr = d.timeRemaining != null ? d.timeRemaining : 0;
+  const ld = d.levelDuration || 900;
+  lastSyncTime = Date.now();
+  localClock = {
+    secsLeft: tr,
+    levelDuration: ld,
+    paused: d.paused,
+    onBreak: d.onBreak,
+    bigBlind: d.bigBlind,
+    warnThreshold: settings.warnThreshold,
+    critThreshold: settings.critThreshold
+  };
+  updateClockDisplay();
+
+  const csEl = el('clockStatus');
+  if (d.paused)       { csEl.textContent = t('pausedLbl');  csEl.className = 'clock-status paused'; }
+  else if (d.onBreak) { csEl.textContent = t('breakLbl');    csEl.className = 'clock-status break-st'; }
+  else                { csEl.textContent = t('timeLeft');   csEl.className = 'clock-status'; }
+
+  // Next blinds row
+  if (d.nextSmallBlind || d.nextBigBlind) {
+    el('nextBlindsTag').style.display = 'block';
+    setText('nextBlinds', fmt(d.nextSmallBlind||0) + ' / ' + fmt(d.nextBigBlind||0));
+  } else {
+    el('nextBlindsTag').style.display = 'none';
+  }
+
+  // Blinds — toggle ante column and card sizing
+  setText('smallBlind', d.smallBlind != null ? fmt(d.smallBlind) : '—', true);
+  setText('bigBlind',   d.bigBlind   != null ? fmt(d.bigBlind)   : '—', true);
+  const blindsRow = el('blindsRow');
+  if (d.ante) {
+    el('anteBlock').style.display = 'block';
+    blindsRow.classList.remove('no-ante');
+    setText('ante', fmt(d.ante), true);
+  } else {
+    el('anteBlock').style.display = 'none';
+    blindsRow.classList.add('no-ante');
+  }
+
+  // Stats
+  setText('playersRemaining', d.playersRemaining != null ? d.playersRemaining : '—', true);
+  setText('playersSub', d.totalPlayers ? t('of') + ' ' + d.totalPlayers + ' ' + t('entered') : '');
+
+  setText('prizePool', d.prizePool != null ? fmtMoney(d.prizePool) : '—', true);
+  const prizeParts = [];
+  if (d.buyIn) prizeParts.push(t('buyin') + ' ' + fmtMoney(d.buyIn));
+  setText('prizePoolSub', prizeParts.join(' · '));
+
+  setText('rebuysAddons', (d.rebuys != null ? d.rebuys : '—') + ' / ' + (d.addons != null ? d.addons : '—'), true);
+  const totalReentries = (d.rebuys || 0) + (d.addons || 0);
+  const rebuysOpen = d._raw && d._raw.RebuysAllowed && !d._raw.RebuysOver;
+  setText('rebuysAddonsSub', totalReentries ? totalReentries + ' ' + t('total') + (rebuysOpen ? ' · ' + t('open') : '') : (rebuysOpen ? t('rebuysOpen') : ''));
+
+  // House contribution
+  setText('houseContrib', d.houseContrib != null ? fmtMoney(d.houseContrib) : '—', true);
+  setText('houseContribSub', d.houseContrib ? t('fromHouse') : '');
+
+  // Stack
+  const avg = d.avgStack;
+  setText('avgStack', avg ? fmt(avg) : '—', true);
+  const bbVal = d.bigBlind && avg ? Math.round(avg / d.bigBlind) : null;
+  setText('stacksBB', bbVal ? bbVal + ' BB' : '— BB');
+  setText('totalChips', d.totalChips != null ? fmt(d.totalChips) : '—', true);
+  setText('tablesInfo', d.tables ? d.tables + ' ' + t('tables') : '— bord');
+
+  if (d.tournamentName) document.title = d.tournamentName + ' — Live';
+
+  // Betalda platser & bust till pengar — nedre inforad
+  const bar = el('moneyInfoBar');
+  if (d.inTheMoney || d.bustsUntilMoney != null) {
+    bar.style.display = 'grid';
+    setText('itmCount', d.inTheMoney || '—');
+    if (d.bustsUntilMoney === 0) {
+      setText('bustsCount', '🏆');
+      setText('bustsLbl', t('inTheMoney'));
+      el('bustsBadge') && (el('bustsBadge').style.display='none');
+    } else {
+      setText('bustsCount', d.bustsUntilMoney != null ? d.bustsUntilMoney : '—');
+      setText('bustsLbl', t('bustsTill'));
+    }
+  } else {
+    bar.style.display = 'none';
+  }
+
+  // Turneringstitel + beskrivning
+  const titleBlock = el('tourneyTitleBlock');
+  const hasTitle = d.tournamentName || d.description;
+  if (hasTitle) {
+    titleBlock.style.display = 'block';
+    setText('tourneyName', d.tournamentName || '');
+    setText('tourneyDesc', d.description || '');
+    el('tourneyDesc').style.display = d.description ? 'block' : 'none';
+  } else {
+    titleBlock.style.display = 'none';
+  }
+}
+
+// ── LOKAL NEDRÄKNING ─────────────────────────────────────────────────────
+// Klockan tickar lokalt varje sekund och synkas mot TD:s värde vid uppdatering.
+let localClock = null;      // { secsLeft, paused, levelDuration, bigBlind }
+let clockHandle = null;
+let lastSyncTime = null;    // när senaste TD-sync skedde
+
+function startLocalClock() {
+  if (clockHandle) clearInterval(clockHandle);
+  clockHandle = setInterval(() => {
+    if (!localClock || localClock.paused) return;  // tickar även under paus
+    localClock.secsLeft = Math.max(0, localClock.secsLeft - 1);
+    updateClockDisplay();
+  }, 1000);
+}
+
+function updateClockDisplay() {
+  if (!localClock) return;
+  const tr = localClock.secsLeft;
+  const ld = localClock.levelDuration || 900;
+  const clockEl = el('clockDisplay');
+  clockEl.textContent = fmtTime(tr);
+  clockEl.className = 'clock-display';
+  if (localClock.paused)              clockEl.classList.add('warning');
+  else if (tr <= settings.critThreshold) clockEl.classList.add('critical');
+  else if (tr <= settings.warnThreshold) clockEl.classList.add('warning');
+  el('progressBar').style.width = ld > 0 ? Math.max(0,Math.min(100,(1-tr/ld)*100))+'%' : '0%';
+}
+
+// ── POLLING ────────────────────────────────────────────────────────────────
+let pollHandle = null;
+let lastDataHash = null;
+
+function startPolling(url, secs) {
+  if (pollHandle) clearInterval(pollHandle);
+  async function poll() {
+    try {
+      const r = await fetch(url + '?t=' + Date.now(), { cache: 'no-store' });
+      if (!r.ok) return;
+      const d = await r.json();
+      if (!d || Object.keys(d).length === 0) return;
+      const hash = JSON.stringify(d);
+      if (hash !== lastDataHash) {
+        lastDataHash = hash;
+        lastDataTime = Date.now();
+        render(d);
+      } else {
+        // Same data — still counts as contact
+        if (!lastDataTime) lastDataTime = Date.now();
+      }
+    } catch(e) {}
+  }
+  poll();
+  pollHandle = setInterval(poll, (secs || 10) * 1000);
+}
+
+// ── TIMEOUT ──────────────────────────────────────────────────────────────
+const TIMEOUT_MS = 5 * 60 * 1000; // 5 minuter
+let timeoutCheckHandle = null;
+let lastDataTime = null; // när data senast ändrades
+
+function updateTimeoutBanner() {
+  const banner = document.getElementById('timeoutBanner');
+  if (!banner) return;
+  if (!lastDataTime) return; // ingen data ännu — visa ingenting
+  const age = Date.now() - lastDataTime;
+  if (age > TIMEOUT_MS) {
+    banner.classList.add('show');
+    // Visa hur länge sedan senaste kontakt
+    const mins = Math.floor(age / 60000);
+    const sub = document.getElementById('timeoutSub');
+    if (sub) sub.textContent = (currentLang === 'sv' ? 'senast kontakt' : 'last contact') + ' · ' + mins + ' min sedan';
+    // Grå statusdot
+    const dot = document.getElementById('statusDot');
+    if (dot) dot.className = 'status-dot';
+    const statusTxt = document.getElementById('statusText');
+    if (statusTxt) statusTxt.textContent = t('noContact');
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+(function init() {
+  // Ladda sparat språk
+  try { const l = localStorage.getItem('td_lang'); if (l) { currentLang = l; } } catch(e) {}
+  applyStaticLabels();
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.getElementById('lang-' + currentLang);
+  if (activeBtn) activeBtn.classList.add('active');
+  startLocalClock();
+  timeoutCheckHandle = setInterval(updateTimeoutBanner, 15000);
+  if (location.protocol !== 'file:') {
+    startPolling(location.href.replace(/\/[^\/]*$/, '/') + 'td-receiver.php', 10);
+  }
+})();
+</script>
+</body>
+</html>
