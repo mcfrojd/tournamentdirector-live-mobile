@@ -866,7 +866,7 @@ function updateTimeoutBanner() {
   startLocalClock();
   timeoutCheckHandle = setInterval(updateTimeoutBanner, 15000);
   if (location.protocol !== 'file:') {
-    startPolling(location.href.replace(/\/[^\/]*$/, '/') + 'td-receiver.php', 10);
+    startPolling('/td-receiver', 10);
   }
 })();
 </script>

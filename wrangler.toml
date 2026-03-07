@@ -1,0 +1,9 @@
+# wrangler.toml — Cloudflare Pages KV-bindning
+# Lägg denna fil i roten av ditt GitHub-repo
+
+name = "vastanfors-poker-live"
+compatibility_date = "2024-01-01"
+
+[[kv_namespaces]]
+binding = "TD_DATA"
+id = "58f3190d60644602924aaec8eb1b1897"
