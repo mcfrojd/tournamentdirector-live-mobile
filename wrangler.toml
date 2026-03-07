@@ -1,9 +1,10 @@
-# wrangler.toml — Cloudflare Pages KV-bindning
-# Lägg denna fil i roten av ditt GitHub-repo
+# wrangler.toml — Cloudflare Pages konfiguration
+#
+# KV namespace ID läggs INTE här — det kopplas i Cloudflare-dashboarden:
+#   Pages → ditt projekt → Settings → Functions → KV namespace bindings
+#   Variable name: TD_DATA  →  välj ditt namespace
+#
+# Inga nycklar eller ID:n hamnar i GitHub på det sättet.
 
-name = "vastanfors-poker-live"
+name = "tournamentdirector-live"
 compatibility_date = "2024-01-01"
-
-[[kv_namespaces]]
-binding = "TD_DATA"
-id = "58f3190d60644602924aaec8eb1b1897"
