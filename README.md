@@ -6,6 +6,8 @@ A real-time poker tournament display built for [The Tournament Director](https:/
 
 **Live demo:** [live.vastanforspoker.org](https://live.vastanforspoker.org)
 
+![Tournament Director Live](screenshot/td-live.png)
+
 ---
 
 ## ✨ Features
