@@ -1,0 +1,4 @@
+- Ändra rutan "Husbidrag", jag vill att den rutan ska ha 2 värden, Överst "Inköp:" och vad turneringen kostar i inköp, sen under "Husbidrag:" och där ska ev husbidrag stå med. Om husbidrag är 0 så ska det bara stå Inköp i den rutan. Ta bort "Insats" från "prispott" rutan.
+- "Totalt i spel" titeln ska vara "Marker i spel"
+- "Spelare kvar" rutan ska se ut som den gör, men när turneringen är i "förstart" alltså innan turneringen startat så vill jag att det där står "Antal Inköpta" och siffran för antal inköpta hittills, texten "av x anmälda" ska inte synas före turneringsstart.
+- Rutorna "Betalda platser" och "Bust till $" behöver inte synas under förstart.
