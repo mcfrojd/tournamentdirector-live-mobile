@@ -29,9 +29,14 @@ A real-time poker tournament display built for [The Tournament Director](https:/
 ```
 /
 ├── index.html               # Live display page (mobile-optimised)
+├── settings.json            # Currency, language, clock thresholds, poll interval
 ├── wrangler.toml            # Cloudflare Pages config
+├── locales/
+│   ├── sv.json              # Swedish translations
+│   ├── en.json              # English translations
+│   └── xx.json              # Add more languages here
 ├── functions/
-│   └── td-receiver.js       # Cloudflare Pages Function (replaces td-receiver.php)
+│   └── td-receiver.js       # Cloudflare Pages Function
 └── README.md
 ```
 
@@ -130,20 +135,28 @@ Share the URL with players — it works on any phone or tablet browser.
 
 ## ⚙️ Customisation
 
-### Currency symbol
-The default currency is `kr`. To change it, find this line in `index.html`:
+All common settings are in `settings.json` — no need to edit `index.html`.
 
-```html
-<input type="hidden" id="currencySymbol" value="kr">
+```json
+{
+  "currency":            "kr",      // change to $, €, etc.
+  "defaultLang":         "sv",      // default language code
+  "pollIntervalSeconds": 90,        // how often to fetch new data (min 90 recommended)
+  "warnThreshold":       120,       // seconds left when clock turns yellow
+  "critThreshold":       30,        // seconds left when clock turns red
+  "availableLanguages":  ["sv", "en"]  // must match files in /locales
+}
 ```
 
-Change `kr` to `$`, `€`, or whatever you need.
+### Adding a new language
 
-### Clock warning thresholds
-```html
-<input type="hidden" id="warnThreshold" value="120">   <!-- yellow at 2 min -->
-<input type="hidden" id="critThreshold" value="30">    <!-- red at 30 sec -->
-```
+1. Copy `locales/en.json` to `locales/xx.json` (replace `xx` with the language code)
+2. Translate all values
+3. Add `"xx"` to `availableLanguages` in `settings.json`
+4. Add a language button in `index.html`:
+   ```html
+   <button class="lang-btn" id="lang-xx" onclick="setLang('xx')">XX</button>
+   ```
 
 ---
 
@@ -216,9 +229,14 @@ Realtidsvisning för pokerturnering byggd för [The Tournament Director](https:/
 ```
 /
 ├── index.html               # Live-visningssida (mobilanpassad)
+├── settings.json            # Valuta, språk, klockvarningar, pollintervall
 ├── wrangler.toml            # Cloudflare Pages-konfiguration
+├── locales/
+│   ├── sv.json              # Svenska översättningar
+│   ├── en.json              # Engelska översättningar
+│   └── xx.json              # Lägg till fler språk här
 ├── functions/
-│   └── td-receiver.js       # Cloudflare Pages Function (ersätter td-receiver.php)
+│   └── td-receiver.js       # Cloudflare Pages Function
 └── README.md
 ```
 
@@ -317,18 +335,28 @@ Dela länken med spelarna — fungerar i alla mobil- och surfplattewebbläsare.
 
 ## ⚙️ Anpassning
 
-### Valutasymbol
-Standard är `kr`. Ändra i `index.html`:
+Alla vanliga inställningar finns i `settings.json` — du behöver inte redigera `index.html`.
 
-```html
-<input type="hidden" id="currencySymbol" value="kr">
+```json
+{
+  "currency":            "kr",      // ändra till $, €, osv.
+  "defaultLang":         "sv",      // standardspråk
+  "pollIntervalSeconds": 90,        // hur ofta ny data hämtas (min 90 rekommenderas)
+  "warnThreshold":       120,       // sekunder kvar när klockan blir gul
+  "critThreshold":       30,        // sekunder kvar när klockan blir röd
+  "availableLanguages":  ["sv", "en"]  // måste matcha filer i /locales
+}
 ```
 
-### Klockvarningar
-```html
-<input type="hidden" id="warnThreshold" value="120">   <!-- gul vid 2 min -->
-<input type="hidden" id="critThreshold" value="30">    <!-- röd vid 30 sek -->
-```
+### Lägga till ett nytt språk
+
+1. Kopiera `locales/en.json` till `locales/xx.json` (ersätt `xx` med språkkoden)
+2. Översätt alla värden
+3. Lägg till `"xx"` i `availableLanguages` i `settings.json`
+4. Lägg till en språkknapp i `index.html`:
+   ```html
+   <button class="lang-btn" id="lang-xx" onclick="setLang('xx')">XX</button>
+   ```
 
 ---
 
