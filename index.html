@@ -306,20 +306,12 @@
     color: var(--gold);
   }
 
-  /* ── HUSBIDRAG DUAL-ROW ── */
-  .house-row {
-    display: flex; justify-content: center; align-items: baseline;
-    gap: 6px; margin-top: 5px;
+  /* ── HUSBIDRAG SUB ── */
+  .house-contrib-sub {
+    font-size: 0.75rem; color: var(--muted);
+    margin-top: 5px; letter-spacing: 0.05em;
   }
-  .house-row-lbl {
-    font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase;
-    color: var(--muted);
-  }
-  .house-row-val {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.5rem; letter-spacing: 0.03em; color: var(--cream);
-  }
-  .house-row-val.gold { color: var(--gold); }
+  .house-contrib-sub span { color: var(--cream); }
 
   /* ── TOAST ── */
   .toast {
@@ -414,14 +406,10 @@
       <div class="stat-sub" id="rebuysAddonsSub"></div>
     </div>
     <div class="stat-card" id="houseCard">
-      <div class="stat-lbl" id="lbl-house">Inköp / Husbidrag</div>
-      <div class="house-row">
-        <span class="house-row-lbl" id="lbl-buyin2">Inköp:</span>
-        <span class="house-row-val" id="buyInVal">—</span>
-      </div>
-      <div class="house-row" id="houseContribRow" style="display:none">
-        <span class="house-row-lbl" id="lbl-houseRow">Husbidrag:</span>
-        <span class="house-row-val gold" id="houseContrib">—</span>
+      <div class="stat-lbl" id="lbl-house">Inköp</div>
+      <div class="stat-val" id="buyInVal">—</div>
+      <div class="house-contrib-sub" id="houseContribRow" style="display:none">
+        + <span id="houseContrib">—</span> <span id="lbl-houseRow">husbidrag</span>
       </div>
     </div>
   </div>
@@ -502,9 +490,9 @@ const LANG = {
     total:         'totalt',
     open:          'öppna',
     rebuysOpen:    'rebuys öppna',
-    house:         'Inköp / Husbidrag',
+    house:         'Inköp',
     buyin2:        'Inköp:',
-    houseRow:      'Husbidrag:',
+    houseRow:      'husbidrag',
     fromHouse:     'från huset',
     purchased:     'Antal inköpta',
     chipsInPlay:   'Marker i spel',
@@ -543,9 +531,9 @@ const LANG = {
     total:         'total',
     open:          'open',
     rebuysOpen:    'rebuys open',
-    house:         'Buy-in / House',
+    house:         'Buy-in',
     buyin2:        'Buy-in:',
-    houseRow:      'House adds:',
+    houseRow:      'house adds',
     fromHouse:     'from the house',
     purchased:     'Buy-ins sold',
     chipsInPlay:   'Chips in play',
@@ -616,7 +604,7 @@ function t(key) { return LANG[currentLang][key] || key; }
 
 
 function fmt(n) { return Number(n).toLocaleString('sv-SE'); }
-function fmtMoney(n) { return settings.currency + '\u00a0' + Number(n).toLocaleString('sv-SE'); }
+function fmtMoney(n) { return Number(n).toLocaleString('sv-SE') + '\u00a0' + settings.currency; }
 function fmtTime(secs) {
   secs = Math.max(0, Math.round(secs));
   return String(Math.floor(secs/60)).padStart(2,'0') + ':' + String(secs%60).padStart(2,'0');
@@ -798,7 +786,7 @@ function render(rawData) {
   setText('buyInVal', d.buyIn != null ? fmtMoney(d.buyIn) : '—', true);
   const houseRow = el('houseContribRow');
   if (d.houseContrib && d.houseContrib > 0) {
-    houseRow.style.display = 'flex';
+    houseRow.style.display = 'block';
     setText('houseContrib', fmtMoney(d.houseContrib), true);
   } else {
     houseRow.style.display = 'none';
