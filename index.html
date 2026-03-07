@@ -291,6 +291,36 @@
     opacity: 0.6;
   }
 
+  /* ── TURNERINGSTITEL ROW ── */
+  .tourney-title-row {
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .tourney-left  { flex: 1; }
+  .tourney-right { text-align: right; flex-shrink: 0; padding-left: 12px; }
+  .tourney-game-lbl {
+    font-size: 0.62rem; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 2px;
+  }
+  .tourney-game-val {
+    font-size: 0.82rem; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  /* ── HUSBIDRAG DUAL-ROW ── */
+  .house-row {
+    display: flex; justify-content: center; align-items: baseline;
+    gap: 6px; margin-top: 5px;
+  }
+  .house-row-lbl {
+    font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .house-row-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem; letter-spacing: 0.03em; color: var(--cream);
+  }
+  .house-row-val.gold { color: var(--gold); }
+
   /* ── TOAST ── */
   .toast {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px);
@@ -318,8 +348,16 @@
 
   <!-- Turneringstitel -->
   <div class="tourney-title-block" id="tourneyTitleBlock" style="display:none">
-    <div class="tourney-name" id="tourneyName"></div>
-    <div class="tourney-desc" id="tourneyDesc"></div>
+    <div class="tourney-title-row">
+      <div class="tourney-left">
+        <div class="tourney-name" id="tourneyName"></div>
+        <div class="tourney-desc" id="tourneyDesc"></div>
+      </div>
+      <div class="tourney-right" id="gameTypeBlock" style="display:none">
+        <div class="tourney-game-lbl" id="lbl-nowPlaying">Nu spelas</div>
+        <div class="tourney-game-val" id="gameTypeName"></div>
+      </div>
+    </div>
   </div>
 
   <!-- Klocka -->
@@ -375,10 +413,16 @@
       <div class="stat-val" id="rebuysAddons">— / —</div>
       <div class="stat-sub" id="rebuysAddonsSub"></div>
     </div>
-    <div class="stat-card">
-      <div class="stat-lbl" id="lbl-house">Husbidrag</div>
-      <div class="stat-val gold" id="houseContrib">—</div>
-      <div class="stat-sub" id="houseContribSub"></div>
+    <div class="stat-card" id="houseCard">
+      <div class="stat-lbl" id="lbl-house">Inköp / Husbidrag</div>
+      <div class="house-row">
+        <span class="house-row-lbl" id="lbl-buyin2">Inköp:</span>
+        <span class="house-row-val" id="buyInVal">—</span>
+      </div>
+      <div class="house-row" id="houseContribRow" style="display:none">
+        <span class="house-row-lbl" id="lbl-houseRow">Husbidrag:</span>
+        <span class="house-row-val gold" id="houseContrib">—</span>
+      </div>
     </div>
   </div>
 
@@ -390,7 +434,7 @@
       <div class="avg-bb" id="stacksBB">— BB</div>
     </div>
     <div class="stack-card">
-      <div class="panel-ttl" id="lbl-totalChips">Totalt i spel</div>
+      <div class="panel-ttl" id="lbl-totalChips">Marker i spel</div>
       <div class="avg-num" id="totalChips">—</div>
       <div class="avg-sub" id="tablesInfo">— bord</div>
     </div>
@@ -458,10 +502,15 @@ const LANG = {
     total:         'totalt',
     open:          'öppna',
     rebuysOpen:    'rebuys öppna',
-    house:         'Husbidrag',
+    house:         'Inköp / Husbidrag',
+    buyin2:        'Inköp:',
+    houseRow:      'Husbidrag:',
     fromHouse:     'från huset',
+    purchased:     'Antal inköpta',
+    chipsInPlay:   'Marker i spel',
+    nowPlaying:    'Nu spelas',
     avgStack:      'Snittstack',
-    totalChips:    'Totalt i spel',
+    totalChips:    'Marker i spel',
     tables:        'bord',
     paidPlaces:    'betalda platser',
     bustsTill:     'bust till $',
@@ -494,10 +543,15 @@ const LANG = {
     total:         'total',
     open:          'open',
     rebuysOpen:    'rebuys open',
-    house:         'House contribution',
+    house:         'Buy-in / House',
+    buyin2:        'Buy-in:',
+    houseRow:      'House adds:',
     fromHouse:     'from the house',
+    purchased:     'Buy-ins sold',
+    chipsInPlay:   'Chips in play',
+    nowPlaying:    'Game',
     avgStack:      'Avg stack',
-    totalChips:    'Total chips',
+    totalChips:    'Chips in play',
     tables:        'tables',
     paidPlaces:    'paid places',
     bustsTill:     'busts to $',
@@ -537,6 +591,10 @@ function applyStaticLabels() {
     'lbl-house':        t.house,
     'lbl-avgStack':     t.avgStack,
     'lbl-totalChips':   t.totalChips,
+    'lbl-house':        t.house,
+    'lbl-buyin2':       t.buyin2,
+    'lbl-houseRow':     t.houseRow,
+    'lbl-nowPlaying':   t.nowPlaying,
     'lbl-paidPlaces':   t.paidPlaces,
     'lbl-bustsTill':    t.bustsTill,
     'timeoutTitle':    t.noContact,
@@ -717,22 +775,34 @@ function render(rawData) {
   }
 
   // Stats
-  setText('playersRemaining', d.playersRemaining != null ? d.playersRemaining : '—', true);
-  setText('playersSub', d.totalPlayers ? t('of') + ' ' + d.totalPlayers + ' ' + t('entered') : '');
+  const isBefore = d.stateDesc === 'before';
+  if (isBefore) {
+    el('lbl-players').textContent = t('purchased');
+    setText('playersRemaining', d.totalPlayers != null ? d.totalPlayers : '—', true);
+    setText('playersSub', '');
+  } else {
+    el('lbl-players').textContent = t('players');
+    setText('playersRemaining', d.playersRemaining != null ? d.playersRemaining : '—', true);
+    setText('playersSub', d.totalPlayers ? t('of') + ' ' + d.totalPlayers + ' ' + t('entered') : '');
+  }
 
   setText('prizePool', d.prizePool != null ? fmtMoney(d.prizePool) : '—', true);
-  const prizeParts = [];
-  if (d.buyIn) prizeParts.push(t('buyin') + ' ' + fmtMoney(d.buyIn));
-  setText('prizePoolSub', prizeParts.join(' · '));
+  setText('prizePoolSub', '');
 
   setText('rebuysAddons', (d.rebuys != null ? d.rebuys : '—') + ' / ' + (d.addons != null ? d.addons : '—'), true);
   const totalReentries = (d.rebuys || 0) + (d.addons || 0);
   const rebuysOpen = d._raw && d._raw.RebuysAllowed && !d._raw.RebuysOver;
   setText('rebuysAddonsSub', totalReentries ? totalReentries + ' ' + t('total') + (rebuysOpen ? ' · ' + t('open') : '') : (rebuysOpen ? t('rebuysOpen') : ''));
 
-  // House contribution
-  setText('houseContrib', d.houseContrib != null ? fmtMoney(d.houseContrib) : '—', true);
-  setText('houseContribSub', d.houseContrib ? t('fromHouse') : '');
+  // Inköp / Husbidrag-rutan
+  setText('buyInVal', d.buyIn != null ? fmtMoney(d.buyIn) : '—', true);
+  const houseRow = el('houseContribRow');
+  if (d.houseContrib && d.houseContrib > 0) {
+    houseRow.style.display = 'flex';
+    setText('houseContrib', fmtMoney(d.houseContrib), true);
+  } else {
+    houseRow.style.display = 'none';
+  }
 
   // Stack
   const avg = d.avgStack;
@@ -744,9 +814,9 @@ function render(rawData) {
 
   if (d.tournamentName) document.title = d.tournamentName + ' — Live';
 
-  // Betalda platser & bust till pengar — nedre inforad
+  // Betalda platser & bust till pengar — dölj under förstart
   const bar = el('moneyInfoBar');
-  if (d.inTheMoney || d.bustsUntilMoney != null) {
+  if (!isBefore && (d.inTheMoney || d.bustsUntilMoney != null)) {
     bar.style.display = 'grid';
     setText('itmCount', d.inTheMoney || '—');
     if (d.bustsUntilMoney === 0) {
@@ -761,7 +831,7 @@ function render(rawData) {
     bar.style.display = 'none';
   }
 
-  // Turneringstitel + beskrivning
+  // Turneringstitel + beskrivning + speltyp
   const titleBlock = el('tourneyTitleBlock');
   const hasTitle = d.tournamentName || d.description;
   if (hasTitle) {
@@ -771,6 +841,15 @@ function render(rawData) {
     el('tourneyDesc').style.display = d.description ? 'block' : 'none';
   } else {
     titleBlock.style.display = 'none';
+  }
+  // GameName — "Nu spelas" / "Game"
+  const gameName = d._raw && d._raw.GameName ? d._raw.GameName : null;
+  const gameBlock = el('gameTypeBlock');
+  if (gameName) {
+    gameBlock.style.display = 'block';
+    setText('gameTypeName', gameName);
+  } else {
+    gameBlock.style.display = 'none';
   }
 }
 
