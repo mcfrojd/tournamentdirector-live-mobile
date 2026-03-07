@@ -42,6 +42,7 @@ A real-time poker tournament display built for [The Tournament Director](https:/
 - A [Cloudflare](https://cloudflare.com) account (free tier works)
 - [The Tournament Director](https://www.thetournamentdirector.net/) software (Windows)
 - A GitHub account
+- A domain name added to Cloudflare (required to use a custom URL — a `*.pages.dev` subdomain works without one)
 
 ---
 
@@ -98,7 +99,10 @@ Or click **Fork** on GitHub to create your own copy.
    - **URL:** `https://your-pages-domain.pages.dev/td-receiver`
    - **Method:** `POST`
    - **Format:** `JSON`
-   - **Interval:** 60 seconds (or less)
+   - **Interval:** 90 seconds (recommended minimum)
+
+> ⚠️ **Cloudflare KV free tier** has a limit of 100,000 read operations per day. At 90-second intervals a 6-hour tournament uses roughly 240 reads — well within the limit. Shorter intervals may trigger warnings.
+
 4. Click **OK**
 
 > Replace `your-pages-domain` with your actual Cloudflare Pages domain or custom domain.
@@ -137,12 +141,6 @@ Change `kr` to `$`, `€`, or whatever you need.
 ```html
 <input type="hidden" id="warnThreshold" value="120">   <!-- yellow at 2 min -->
 <input type="hidden" id="critThreshold" value="30">    <!-- red at 30 sec -->
-```
-
-### Connection timeout
-Default is 5 minutes. Find this line in `index.html`:
-```js
-const TIMEOUT_MS = 5 * 60 * 1000;
 ```
 
 ---
@@ -231,6 +229,7 @@ Realtidsvisning för pokerturnering byggd för [The Tournament Director](https:/
 - Ett [Cloudflare](https://cloudflare.com)-konto (gratistjänst fungerar)
 - [The Tournament Director](https://www.thetournamentdirector.net/) (Windows)
 - Ett GitHub-konto
+- Ett domännamn kopplat till Cloudflare (krävs för egen URL — en `*.pages.dev`-subdomän fungerar utan)
 
 ---
 
@@ -287,7 +286,10 @@ Eller klicka **Fork** på GitHub för att skapa din egen kopia.
    - **URL:** `https://din-pages-domän.pages.dev/td-receiver`
    - **Method:** `POST`
    - **Format:** `JSON`
-   - **Interval:** 60 sekunder (eller kortare)
+   - **Interval:** 90 sekunder (rekommenderat minimum)
+
+> ⚠️ **Cloudflare KV gratistjänst** har en gräns på 100 000 läsoperationer per dag. Med 90 sekunders intervall under ett 6-timmars spel används ca 240 anrop — långt under gränsen. Kortare intervall kan utlösa varningar.
+
 4. Klicka **OK**
 
 > Ersätt `din-pages-domän` med din faktiska Cloudflare Pages-domän eller anpassad domän.
@@ -324,12 +326,6 @@ Standard är `kr`. Ändra i `index.html`:
 ```html
 <input type="hidden" id="warnThreshold" value="120">   <!-- gul vid 2 min -->
 <input type="hidden" id="critThreshold" value="30">    <!-- röd vid 30 sek -->
-```
-
-### Timeout utan data
-Standard är 5 minuter. Hitta i `index.html`:
-```js
-const TIMEOUT_MS = 5 * 60 * 1000;
 ```
 
 ---

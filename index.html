@@ -268,30 +268,6 @@
   .lang-btn:hover  { color: var(--cream); border-color: var(--muted); }
 
 
-  /* ── TIMEOUT OVERLAY ── */
-  .timeout-banner {
-    display: none;
-    position: fixed; inset: 0;
-    background: rgba(13,17,23,0.85);
-    z-index: 100;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-  }
-  .timeout-banner.show { display: flex; }
-  .timeout-icon { font-size: 2.5rem; opacity: 0.4; }
-  .timeout-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.8rem; letter-spacing: 0.1em;
-    color: var(--muted);
-  }
-  .timeout-sub {
-    font-size: 0.72rem; letter-spacing: 0.2em;
-    text-transform: uppercase; color: var(--muted);
-    opacity: 0.6;
-  }
-
   /* ── TURNERINGSTITEL ROW ── */
   .tourney-title-row {
     display: flex; justify-content: space-between; align-items: flex-start;
@@ -450,13 +426,6 @@
   </div>
 
 
-  <!-- Timeout overlay -->
-  <div class="timeout-banner" id="timeoutBanner">
-    <div class="timeout-icon">📡</div>
-    <div class="timeout-title" id="timeoutTitle">Ingen kontakt</div>
-    <div class="timeout-sub" id="timeoutSub">senaste data · —</div>
-  </div>
-
 </div><!-- /page -->
 
 <div class="toast" id="toast"></div>
@@ -503,7 +472,6 @@ const LANG = {
     tables:        'bord',
     paidPlaces:    'betalda platser',
     bustsTill:     'bust till $',
-    noContact:     'Ingen kontakt',
     inTheMoney:    '🏆 i pengarna!',
     break:         'Paus',
     level:         'Nivå',
@@ -544,7 +512,6 @@ const LANG = {
     tables:        'tables',
     paidPlaces:    'paid places',
     bustsTill:     'busts to $',
-    noContact:     'No contact',
     inTheMoney:    '🏆 in the money!',
     break:         'Break',
     level:         'Level',
@@ -586,7 +553,6 @@ function applyStaticLabels() {
     'lbl-nowPlaying':   t.nowPlaying,
     'lbl-paidPlaces':   t.paidPlaces,
     'lbl-bustsTill':    t.bustsTill,
-    'timeoutTitle':    t.noContact,
   };
   Object.entries(map).forEach(([id, txt]) => {
     const e = document.getElementById(id);
@@ -885,42 +851,12 @@ function startPolling(url, secs) {
       const hash = JSON.stringify(d);
       if (hash !== lastDataHash) {
         lastDataHash = hash;
-        lastDataTime = Date.now();
         render(d);
-      } else {
-        // Same data — still counts as contact
-        if (!lastDataTime) lastDataTime = Date.now();
       }
     } catch(e) {}
   }
   poll();
   pollHandle = setInterval(poll, (secs || 10) * 1000);
-}
-
-// ── TIMEOUT ──────────────────────────────────────────────────────────────
-const TIMEOUT_MS = 5 * 60 * 1000; // 5 minuter
-let timeoutCheckHandle = null;
-let lastDataTime = null; // när data senast ändrades
-
-function updateTimeoutBanner() {
-  const banner = document.getElementById('timeoutBanner');
-  if (!banner) return;
-  if (!lastDataTime) return; // ingen data ännu — visa ingenting
-  const age = Date.now() - lastDataTime;
-  if (age > TIMEOUT_MS) {
-    banner.classList.add('show');
-    // Visa hur länge sedan senaste kontakt
-    const mins = Math.floor(age / 60000);
-    const sub = document.getElementById('timeoutSub');
-    if (sub) sub.textContent = (currentLang === 'sv' ? 'senast kontakt' : 'last contact') + ' · ' + mins + ' min sedan';
-    // Grå statusdot
-    const dot = document.getElementById('statusDot');
-    if (dot) dot.className = 'status-dot';
-    const statusTxt = document.getElementById('statusText');
-    if (statusTxt) statusTxt.textContent = t('noContact');
-  } else {
-    banner.classList.remove('show');
-  }
 }
 
 // ── INIT ───────────────────────────────────────────────────────────────────
@@ -932,7 +868,6 @@ function updateTimeoutBanner() {
   const activeBtn = document.getElementById('lang-' + currentLang);
   if (activeBtn) activeBtn.classList.add('active');
   startLocalClock();
-  timeoutCheckHandle = setInterval(updateTimeoutBanner, 15000);
   if (location.protocol !== 'file:') {
     startPolling('/td-receiver', 10);
   }
