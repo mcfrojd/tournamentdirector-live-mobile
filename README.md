@@ -21,6 +21,7 @@ A real-time poker tournament display built for [The Tournament Director](https:/
 - 📡 Auto-detects lost connection after 5 minutes
 - 🌙 GitHub Dark theme
 - 📱 Mobile-first responsive design
+- 📲 installable as a PWA (add to home screen on iOS & Android)
 
 ---
 
@@ -29,8 +30,15 @@ A real-time poker tournament display built for [The Tournament Director](https:/
 ```
 /
 ├── index.html               # Live display page (mobile-optimised)
+├── manifest.json            # PWA manifest (name, icons, display mode)
+├── service-worker.js        # PWA service worker (caching strategy)
 ├── settings.json            # Currency, language, clock thresholds, poll interval
 ├── wrangler.toml            # Cloudflare Pages config
+├── icons/
+│   ├── icon-96.png
+│   ├── icon-192.png
+│   ├── icon-384.png
+│   └── icon-512.png
 ├── locales/
 │   ├── sv.json              # Swedish translations
 │   ├── en.json              # English translations
@@ -83,6 +91,8 @@ Or click **Fork** on GitHub to create your own copy.
    - **Build command:** *(leave empty)*
    - **Build output directory:** `/` *(or leave as default)*
 4. Click **Save and Deploy**
+
+> 💡 Make sure the `icons/` folder with your PNG icons is included in the repo before deploying — they are required for the PWA manifest.
 
 ---
 
@@ -192,6 +202,20 @@ The following fields from Tournament Director's JSON output are used:
 
 ---
 
+## 📲 PWA — Install as App
+
+The app can be installed directly from the browser — no App Store needed.
+
+**Android (Chrome):** A banner or "Add to Home Screen" prompt appears automatically after visiting the page.
+
+**iOS (Safari):** Tap the share icon → "Add to Home Screen".
+
+Once installed it runs fullscreen with no browser chrome, and static assets load instantly from cache even on poor WiFi.
+
+> The live data endpoint (`/td-receiver`) is always fetched from the network — it is never served from cache.
+
+---
+
 ## 📄 License
 
 MIT — free to use and modify.
@@ -221,6 +245,7 @@ Realtidsvisning för pokerturnering byggd för [The Tournament Director](https:/
 - 📡 Upptäcker automatiskt tappat anslutning efter 5 minuter
 - 🌙 GitHub Dark-tema
 - 📱 Mobilanpassad design
+- 📲 Installerbar som PWA (lägg till på hemskärmen på iOS och Android)
 
 ---
 
@@ -229,8 +254,15 @@ Realtidsvisning för pokerturnering byggd för [The Tournament Director](https:/
 ```
 /
 ├── index.html               # Live-visningssida (mobilanpassad)
+├── manifest.json            # PWA-manifest (namn, ikoner, visningsläge)
+├── service-worker.js        # PWA service worker (cachestrategi)
 ├── settings.json            # Valuta, språk, klockvarningar, pollintervall
 ├── wrangler.toml            # Cloudflare Pages-konfiguration
+├── icons/
+│   ├── icon-96.png
+│   ├── icon-192.png
+│   ├── icon-384.png
+│   └── icon-512.png
 ├── locales/
 │   ├── sv.json              # Svenska översättningar
 │   ├── en.json              # Engelska översättningar
@@ -283,6 +315,8 @@ Eller klicka **Fork** på GitHub för att skapa din egen kopia.
    - **Build command:** *(lämna tomt)*
    - **Build output directory:** `/` *(eller lämna som standard)*
 4. Klicka **Save and Deploy**
+
+> 💡 Se till att mappen `icons/` med dina PNG-ikoner finns i repot innan deploy — de krävs av PWA-manifestet.
 
 ---
 
@@ -357,6 +391,20 @@ Alla vanliga inställningar finns i `settings.json` — du behöver inte rediger
    ```html
    <button class="lang-btn" id="lang-xx" onclick="setLang('xx')">XX</button>
    ```
+
+---
+
+## 📲 PWA — Installera som app
+
+Appen kan installeras direkt från webbläsaren — ingen App Store behövs.
+
+**Android (Chrome):** En banner eller "Lägg till på startskärmen"-prompt visas automatiskt efter besök.
+
+**iOS (Safari):** Tryck på dela-ikonen → "Lägg till på hemskärmen".
+
+När installerad körs den i helskärm utan webbläsarens adressfält, och statiska filer laddas direkt från cache även på dåligt WiFi.
+
+> Live-dataendpointen (`/td-receiver`) hämtas alltid från nätverket — den cachas aldrig.
 
 ---
 
