@@ -103,7 +103,7 @@ Or click **Fork** on GitHub to create your own copy.
    - **Format:** `JSON`
    - **Interval:** 90 seconds (recommended minimum)
 
-> ⚠️ **Cloudflare KV free tier** has a limit of 100,000 read operations per day. At 90-second intervals a 6-hour tournament uses roughly 240 reads — well within the limit. Shorter intervals may trigger warnings.
+> ⚠️ **Cloudflare KV free tier limits:** 100,000 reads/day · 1,000 writes/day · 1 GB storage · max 1 write/second per key. Exceeding these returns `429` errors. At 90-second intervals, Tournament Director performs ~240 writes per 6-hour session — well within limits. Each visitor tab adds ~240 reads per 6 hours. Shorter intervals increase both counts proportionally.
 
 4. Click **OK**
 
@@ -290,7 +290,7 @@ Eller klicka **Fork** på GitHub för att skapa din egen kopia.
    - **Format:** `JSON`
    - **Interval:** 90 sekunder (rekommenderat minimum)
 
-> ⚠️ **Cloudflare KV gratistjänst** har en gräns på 100 000 läsoperationer per dag. Med 90 sekunders intervall under ett 6-timmars spel används ca 240 anrop — långt under gränsen. Kortare intervall kan utlösa varningar.
+> ⚠️ **Cloudflare KV gratistjänst:** 100 000 läsningar/dag · 1 000 skrivningar/dag · 1 GB lagring · max 1 skrivning/sekund per nyckel. Om gränserna överskrids returneras `429`-fel. Med 90 sekunders intervall gör Tournament Director ~240 skrivningar per 6-timmars spel — långt under gränsen. Varje öppen visningsflik lägger till ~240 läsningar per 6 timmar. Kortare intervall ökar båda proportionellt.
 
 4. Klicka **OK**
 
