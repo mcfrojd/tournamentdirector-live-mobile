@@ -5,7 +5,7 @@
 // GET  /td-receiver  → returnerar senaste sparade data till index.html
 
 const KV_KEY = 'latest';
-const ALLOWED_ORIGINS = ['https://live.vastanforspoker.org'];
+const ALLOWED_ORIGINS = ['https://live.vastanforspoker.org', 'https://vastanforspoker.se'];
 
 function corsHeaders(request) {
   const origin = request.headers.get('Origin') || '';
